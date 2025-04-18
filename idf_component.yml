@@ -1,0 +1,10 @@
+version: 1.0.0
+license: "MIT"
+description: bat_monitor
+url: https://github.com/NingZiXi/bat_monitor
+files:
+  exclude:
+  - .git
+dependencies:
+  idf:
+    version: ">=5.3.1"
