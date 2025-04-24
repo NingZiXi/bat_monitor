@@ -9,8 +9,12 @@
 
 #define TAG "bat_monitor"
 
-// 充电检测电压变化阈值
-#define CHARGE_DETECT_DELTA 100
+// 充电时电压变化阈值
+#define CHARGE_DETECT_DELTA 0.4f
+
+// 任务通知位定义
+#define CHARGING_BEGIN_BIT (1 << 0)
+#define CHARGING_STOP_BIT  (1 << 1)
 
 // ADC校准方案
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
@@ -37,21 +41,27 @@ typedef struct {
     bool running;
 } bat_monitor_t;
 
-static void IRAM_ATTR charge_detect_isr(void *arg) {
-    bat_monitor_t* handle = (bat_monitor_t*)arg;
-    bool charge_state = gpio_get_level(handle->config.charge_io);
-    
-    if (charge_state) {
-        handle->event_cb(BAT_EVENT_CHARGING_BEGIN, 0, handle->user_data);
-    } else {
-        handle->event_cb(BAT_EVENT_CHARGING_STOP, 0, handle->user_data);
-    }
-}
-
+/**
+ * @brief 监控任务
+ * 
+ * @param arg 任务参数
+ */
 static void monitor_task(void *arg) {
     bat_monitor_t* handle = (bat_monitor_t*)arg;
     float last_voltage = 0.0f;
     bool charging_state = false;
+    bool previous_gpio_state = false;
+    
+    // 如果配置了充电检测IO，获取初始状态
+    if (handle->config.charge_io != GPIO_NUM_NC) {
+        previous_gpio_state = gpio_get_level(handle->config.charge_io);
+        charging_state = previous_gpio_state;
+        
+        // 报告初始充电状态
+        if (handle->event_cb && charging_state) {
+            handle->event_cb(BAT_EVENT_CHARGING_BEGIN, 0, handle->user_data);
+        }
+    }
     
     while (handle->running) {
         float voltage = 0.0f;
@@ -64,9 +74,30 @@ static void monitor_task(void *arg) {
         
         voltage = (float)mv / 1000.0f * handle->config.v_div_ratio;
         
-        // 如果没有配置充电检测IO，则通过电压跳变检测充电状态
-        if (handle->config.charge_io == GPIO_NUM_NC) {
-            // 检测电压上升速率，判断是否开始充电
+        // 检测充电状态
+        if (handle->config.charge_io != GPIO_NUM_NC) {
+            // 直接读取GPIO电平判断充电状态
+            bool current_gpio_state = gpio_get_level(handle->config.charge_io);
+            
+            // 检测状态变化
+            if (current_gpio_state != previous_gpio_state) {
+                if (current_gpio_state) {
+                    // 充电开始
+                    if (handle->event_cb) {
+                        handle->event_cb(BAT_EVENT_CHARGING_BEGIN, voltage, handle->user_data);
+                    }
+                } else {
+                    // 充电停止
+                    if (handle->event_cb) {
+                        handle->event_cb(BAT_EVENT_CHARGING_STOP, voltage, handle->user_data);
+                    }
+                }
+                previous_gpio_state = current_gpio_state;
+            }
+            
+            charging_state = current_gpio_state;
+        } else {
+            // 如果没有配置充电检测IO，则通过电压跳变检测充电状态
             if (voltage > last_voltage + CHARGE_DETECT_DELTA) {
                 if (!charging_state) {
                     charging_state = true;
@@ -76,7 +107,7 @@ static void monitor_task(void *arg) {
                 }
             } 
             // 检测电压稳定或下降，判断是否停止充电
-            else if (voltage <= last_voltage && charging_state) {
+            else if (voltage <= last_voltage - CHARGE_DETECT_DELTA && charging_state) {
                 charging_state = false;
                 if (handle->event_cb) {
                     handle->event_cb(BAT_EVENT_CHARGING_STOP, voltage, handle->user_data);
@@ -99,7 +130,7 @@ static void monitor_task(void *arg) {
             }
             
             // 检查充满事件
-            if (voltage >= handle->config.v_max) {
+            if (voltage >= handle->config.v_max + CHARGE_DETECT_DELTA*1.75f && charging_state) {
                 handle->event_cb(BAT_EVENT_FULL, voltage, handle->user_data);
             }
         }
@@ -148,25 +179,21 @@ bat_monitor_handle_t bat_monitor_create(const bat_monitor_config_t *config) {
         ESP_LOGE(TAG, "Failed to create ADC calibration: %s", esp_err_to_name(ret));
     }
     
-    //初始化GPIO中断
+    // 如果配置了充电检测IO，初始化为输入模式
     if (config->charge_io != GPIO_NUM_NC) {
         gpio_config_t io_conf = {
             .pin_bit_mask = (1ULL << config->charge_io),
             .mode = GPIO_MODE_INPUT,
             .pull_up_en = GPIO_PULLUP_DISABLE,
             .pull_down_en = GPIO_PULLDOWN_DISABLE,
-            .intr_type = GPIO_INTR_ANYEDGE
+            .intr_type = GPIO_INTR_DISABLE
         };
         gpio_config(&io_conf);
-        gpio_install_isr_service(0);
-        gpio_isr_handler_add(config->charge_io, charge_detect_isr, monitor);
     }
-    
-    // 创建监控任务
-    xTaskCreate(monitor_task, "bat_monitor", 2048, monitor, 5, &monitor->monitor_task);
     
     return (bat_monitor_handle_t)monitor;
 }
+
 void bat_monitor_set_event_cb(bat_monitor_handle_t handle, 
                             bat_monitor_event_cb_t event_cb, 
                             void *user_data) {
@@ -175,6 +202,9 @@ void bat_monitor_set_event_cb(bat_monitor_handle_t handle,
     bat_monitor_t *monitor = (bat_monitor_t *)handle;
     monitor->event_cb = event_cb;
     monitor->user_data = user_data;
+
+    // 创建监控任务
+    xTaskCreate(monitor_task, "bat_monitor", 1024*3, monitor, 5, &monitor->monitor_task);
 }
 
 void bat_monitor_destroy(bat_monitor_handle_t handle) {
@@ -185,9 +215,6 @@ void bat_monitor_destroy(bat_monitor_handle_t handle) {
     
     // 等待任务结束
     vTaskDelay(10);
-    
-    // 释放资源
-    gpio_isr_handler_remove(monitor->config.charge_io);
     
     // 删除ADC校准句柄
     if (monitor->adc_cali_handle) {

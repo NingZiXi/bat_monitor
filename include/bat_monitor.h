@@ -1,12 +1,9 @@
 /**
- * @file battery_monitor.h
- * @author 宁子希 (1589326497@qq.com)
- * @brief       电池监测模块
+ * @file bat_monitor.h
+ * @author 宁子希
+ * @brief 电池监测组件
  * @version 1.0.0
- * @date 2024-11-26
- * 
- * @copyright Copyright (c) 2024
- * 
+ * @date 2025-04-23
  */
 #ifndef BATTERY_MONITOR_H
 #define BATTERY_MONITOR_H
@@ -27,8 +24,8 @@ typedef struct {
     adc_channel_t adc_ch;    // ADC通道
     gpio_num_t  charge_io;   // GPIO引脚
     float v_div_ratio;       // 分压比 (R1+R2)/R2
-    float v_min;             // 最低电压
-    float v_max;             // 最高电压
+    float v_min;             // 电池亏点电压
+    float v_max;             // 电池满电电压
     float low_thresh;        // 低电量阈值(%)
     uint32_t report_ms;      // 报告间隔(ms)
 } bat_monitor_config_t;
