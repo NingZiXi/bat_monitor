@@ -3,7 +3,7 @@
 ![Chip Support](https://img.shields.io/badge/ESP32-ESP32S3-77216F?logo=espressif)
 ![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.3.1-blue) 
 ![Version](https://img.shields.io/badge/Version-1.0.0-brightgreen)
-![GitHub Stars](https://img.shields.io/github/stars/NingZiXi/bat_monitor?style=social)
+![GitHub Stars](https://img.shields.io/github/stars/NingZiXi/bat_monitor.svg?style=social&label=Stars)
 
 `bat_monitor`组件是一个专为ESP32系列芯片设计的电池电量监测解决方案，它能够实时监测电池电压、检测充电状态（支持GPIO检测和电压变化检测两种方式），并在电池低电量、充满电等状态变化时触发相应事件通知。组件采用ADC采样和电压分压原理，支持自定义电压阈值和报告间隔，可轻松集成到ESP-IDF项目中。
 
