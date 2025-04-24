@@ -60,7 +60,7 @@ void app_main() {
         .charge_io = GPIO_NUM_40,    // 充电检测IO引脚，如不使用配置为-1
         .v_div_ratio = 3.0f,         // 电压分压比
         .v_min = 6.3f,               // 电池亏点电压6.3V
-        .v_max = 7.7f,               // 电池满电电压7.4V
+        .v_max = 7.7f,               // 电池满电电压7.7V
         .low_thresh = 10.0f,         // 低电量阈值10%
         .report_ms = 1000            // 1秒报告间隔
     };
