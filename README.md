@@ -1,14 +1,44 @@
-# bat_monitor 电池电量监测组件
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
-![Chip Support](https://img.shields.io/badge/ESP32-ESP32S3-77216F?logo=espressif)
-![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.3.1-blue) 
-![Version](https://img.shields.io/badge/Version-1.0.0-brightgreen)
-![GitHub Stars](https://img.shields.io/github/stars/NingZiXi/bat_monitor.svg?style=social&label=Stars)
+![alt text](image.jpg)
+<h1 align="center">🔋 ESP32 Battery Monitor</h1>
 
-`bat_monitor`组件是一个专为ESP32系列芯片设计的电池电量监测解决方案，它能够实时监测电池电压、检测充电状态（支持GPIO检测和电压变化检测两种方式），并在电池低电量、充满电等状态变化时触发相应事件通知。组件采用ADC采样和电压分压原理，支持自定义电压阈值和报告间隔，可轻松集成到ESP-IDF项目中。
+<p align="center">
+bat_monitor是一个专为ESP32设计的电池电量监测组件<br/>
+支持实时电压监测和充电状态检测<br/>
+提供低电量报警和充满电通知功能
+</p>
+
+<p align="center">
+<a href="./README_EN.md">English</a>
+· 简体中文
+· <a href="https://github.com/NingZiXi/bat_monitor/releases">更新日志</a>
+· <a href="https://github.com/NingZiXi/bat_monitor/issues">反馈问题</a>
+</p>
+
+<p align="center">
+  <a href="LICENSE">
+    <img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg" />
+  </a>
+  <a href="https://www.espressif.com/">
+    <img alt="ESP32" src="https://img.shields.io/badge/ESP32-ESP32S3-77216F?logo=espressif" />
+  </a>
+  <a href="https://docs.espressif.com/projects/esp-idf/">
+    <img alt="ESP-IDF" src="https://img.shields.io/badge/ESP--IDF-v5.3+-orange.svg" />
+  </a>
+  <a href="https://www.espressif.com/">
+    <img alt="Platform" src="https://img.shields.io/badge/Platform-ESP32-green.svg" />
+  </a>
+  <a href="">
+    <img alt="Version" src="https://img.shields.io/badge/Version-v1.0.0-brightgreen.svg" />
+  </a>
+  <a href="https://github.com/NingZiXi/bat_monitor/stargazers">
+    <img alt="GitHub Stars" src="https://img.shields.io/github/stars/NingZiXi/bat_monitor.svg?style=social&label=Stars" />
+  </a>
+</p>
 
 ---
-## 快速开始
+## 🚀 简介
+**bat_monitor**组件是一个专为ESP32系列芯片设计的电池电量⚡监测解决方案，它能够实时监测电池电压、检测充电状态（支持GPIO检测和电压变化检测两种方式），并在电池低电量、充满电🔋等状态变化时触发相应事件通知。组件采用ADC采样和电压分压原理，支持自定义🔧电压阈值和报告间隔，可轻松集成到ESP-IDF项目中。
+## 🛠️ 快速开始
 
 ### 1. 克隆项目
 
@@ -86,8 +116,11 @@ void app_main() {
     bat_monitor_destroy(handle);
 }
 ```
-## 贡献
+## 🤝 贡献
 本项目采用 MIT 许可证，详情请参阅 [LICENSE](LICENSE) 文件。
 
-
+<p align="center">
+感谢您使用 ESP32 Battery Monitor！🔋<br/>
+如果觉得项目对您有帮助，请给个 ⭐ Star 支持一下！
+</p>
 
